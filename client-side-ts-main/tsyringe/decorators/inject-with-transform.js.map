@@ -1,0 +1,1 @@
+{"version":3,"file":"inject-with-transform.js","sourceRoot":"","sources":["inject-with-transform.ts"],"names":[],"mappings":"AACA,OAAO,EAAC,4BAA4B,EAAC,MAAM,uBAAuB,CAAC;AAGnE;;;;;;GAMG;AACH,SAAS,mBAAmB,CAC1B,KAA0B,EAC1B,WAAgD,EAChD,GAAG,IAAW;IAEd,OAAO,4BAA4B,CAAC,KAAK,EAAE;QACzC,cAAc,EAAE,WAAW;QAC3B,IAAI,EAAE,IAAI;KACX,CAAC,CAAC;AACL,CAAC;AAED,eAAe,mBAAmB,CAAC"}

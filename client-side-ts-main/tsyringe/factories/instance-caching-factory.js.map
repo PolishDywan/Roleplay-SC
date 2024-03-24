@@ -1,0 +1,1 @@
+{"version":3,"file":"instance-caching-factory.js","sourceRoot":"","sources":["instance-caching-factory.ts"],"names":[],"mappings":"AAGA,MAAM,CAAC,OAAO,UAAU,sBAAsB,CAC5C,WAA+B;IAE/B,IAAI,QAAW,CAAC;IAChB,OAAO,CAAC,mBAAwC,EAAE,EAAE;QAClD,IAAI,QAAQ,IAAI,SAAS,EAAE,CAAC;YAC1B,QAAQ,GAAG,WAAW,CAAC,mBAAmB,CAAC,CAAC;QAC9C,CAAC;QACD,OAAO,QAAQ,CAAC;IAClB,CAAC,CAAC;AACJ,CAAC"}

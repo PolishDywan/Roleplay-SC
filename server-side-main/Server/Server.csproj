@@ -1,0 +1,85 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+        <OutputPath>C:\Users\booya\Desktop\AltV.Serwer\resources\server</OutputPath>
+        <Nullable>annotations</Nullable>
+        <RootNamespace>Server</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+        <OutputPath />
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+        <OutputPath />
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AltV.Net" Version="16.0.11" />
+        <PackageReference Include="AltV.Net.Async" Version="16.0.11" />
+        <PackageReference Include="AltV.Net.EntitySync" Version="1.18.0" />
+        <PackageReference Include="AltV.Net.EntitySync.ServerEvent" Version="16.0.11" />
+        <PackageReference Include="BCrypt.Net-Core" Version="1.6.0" />
+        <PackageReference Include="Discord.Net" Version="3.14.1" />
+        <PackageReference Include="Discord.Net.Commands" Version="3.14.1" />
+        <PackageReference Include="Discord.Net.Core" Version="3.14.1" />
+        <PackageReference Include="Discord.Net.Rest" Version="3.14.1" />
+        <PackageReference Include="Discord.Net.Webhook" Version="3.14.1" />
+        <PackageReference Include="Discord.Net.WebSocket" Version="3.14.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+        <PackageReference Include="Refit" Version="6.3.2" />
+        <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
+        <PackageReference Include="System.Net.Http.Json" Version="8.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Server.Core\Server.Core.csproj" />
+        <ProjectReference Include="..\Server.DataAccessLayer\Server.DataAccessLayer.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="server.cfg">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="resource.cfg">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\Animations.sql">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\1Houses.sql">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\VehicleCatalog.sql">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\2Doors.sql">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\ItemCatalog.sql">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\Doors.sql">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\Houses.sql">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+</Project>

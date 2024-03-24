@@ -1,0 +1,330 @@
+﻿import * as alt from "alt-client";
+import * as native from "natives";
+import {injectable} from "tsyringe";
+import {Player} from "../../extensions/player.extensions";
+import {foundation} from "../../decorators/foundation";
+import {on, onGui, onServer} from "../../decorators/events";
+import {loadModel, UID} from "../../helpers";
+import {DialogType} from "@enums/dialog.type";
+import {CameraModule} from "../../modules/camera.module";
+import {CharacterModule} from "../../modules/character.module";
+import {EventModule} from "../../modules/event.module";
+import {UpdateModule} from "../../modules/update.module";
+import {LoggerModule} from "../../modules/logger.module";
+import {LoadingSpinnerModule} from "../../modules/loading-spinner.module";
+import {CharCreatorModule} from "../../modules/char-creator.module";
+import {DialogModule} from "../../modules/dialog.module";
+import {ClothingModule} from "../../modules/clothing.module";
+import {CharacterInterface} from "@interfaces/character/character.interface";
+import {CharacterCreatorPurchaseType} from "@enums/character-creator-purchase.type";
+import {GenderType} from "@enums/gender.type";
+import {LocationInterface} from "@interfaces/location.interface";
+import {CharacterCreatorPurchaseInterface} from "@interfaces/character/character-creator-purchase.interface";
+import {GuiModule} from "modules/gui.module";
+import {ClothesInterface} from "@interfaces/character/clothes.interface";
+import {CharacterCreatorDataInterface} from "@interfaces/character/character-creator-data.interface";
+
+@foundation() @injectable()
+export class CharacterCreatorHandler {
+    private pedId: number;
+    private everyTickRef: string;
+    private isNewCharacter: boolean = false;
+    private isTutorial: boolean = false;
+    private setNudeMode: boolean = false;
+
+    private camPortrait: LocationInterface = {
+        pos: new alt.Vector3(403.16586, -998.3614, -98.53971), rot: new alt.Vector3(-14.409467, 4.2688686, 28.610905)
+    }
+    private camFace: LocationInterface = {
+        pos: new alt.Vector3(402.86017, -997.1442, -98.344), rot: new alt.Vector3(1.4960656, -0, 16.131594)
+    }
+    private camTorso: LocationInterface = {
+        pos: new alt.Vector3(402.92615, -997.37085, -98.78486), rot: new alt.Vector3(1.4960656, 0, 16.131594)
+    }
+    private camPants: LocationInterface = {
+        pos: new alt.Vector3(402.92615, -997.37085, -99.574425), rot: new alt.Vector3(1.4960656, 0, 16.131594)
+    }
+    private camFeets: LocationInterface = {
+        pos: new alt.Vector3(402.92615, -997.37085, -99.67937), rot: new alt.Vector3(-19.803135, 4.268868, 15.383445)
+    }
+
+    private characterPos: alt.Vector3 = new alt.Vector3(402.857, -996.672, -100);
+    private lastIndex: number = 0;
+
+    public constructor(private readonly camera: CameraModule, private readonly character: CharacterModule, private readonly player: Player, private readonly event: EventModule, private readonly update: UpdateModule, private readonly logger: LoggerModule, private readonly loading: LoadingSpinnerModule, private readonly charCreator: CharCreatorModule, private readonly dialog: DialogModule, private readonly gui: GuiModule, private readonly clothing: ClothingModule) {
+    }
+
+    @onServer("charcreator:open")
+    public async onOpen(character: CharacterInterface, isTutorial: boolean, moneyToSouthCentralPointsValue: number, baseCharacterCosts: number, phonePointsPrice: number): Promise<void> {
+        this.isTutorial = isTutorial;
+        this.logger.info(`[DEBUG] Opening character creator. Tutorial: ${isTutorial}`);
+        if (!character) {
+            this.logger.info("[ERROR] Character object is not initialized.");
+            this.event.emitGui("debug:showError", "Character object is not initialized.");
+            return;
+        }
+        if (this.isTutorial) {
+            // Dodaj tutaj kod obsługujący przypadek, gdy isTutorial jest true
+        }
+    
+        native.setClockTime(12, 0, 0);
+    
+        this.createCamera();
+    
+        const mHash = native.getHashKey("mp_m_freemode_01");
+        const fHash = native.getHashKey("mp_f_freemode_01");
+    
+        await loadModel(mHash);
+        await loadModel(fHash);
+    
+        // Dodaj zabezpieczenie przed odczytem właściwości obiektu character
+        if (character) {
+            this.isNewCharacter = true;
+    
+            this.pedId = native.createPed(2, mHash, this.characterPos.x, this.characterPos.y, this.characterPos.z, 180, false, false);
+    
+            this.charCreator.setup(character, moneyToSouthCentralPointsValue, phonePointsPrice);
+    
+            this.charCreator.addPurchase({
+                id: UID(),
+                type: CharacterCreatorPurchaseType.CHARACTER,
+                name: "Neuen Charakter",
+                description: "Einen neuen Charakter erstellt",
+                southCentralPoints: baseCharacterCosts,
+                removeable: false,
+                orderedVehicle: null
+            });
+    
+            this.character.apply(character, this.pedId);
+        } else {
+            this.loading.show("Obiekt character nie został zainicjowany.");
+            // Dodaj obsługę sytuacji, gdy obiekt character nie został zainicjowany
+            // Na przykład możesz wyświetlić komunikat dla użytkownika informujący o błędzie.
+        }
+    
+        this.event.emitGui("gui:routeto", "charcreator");
+    
+        this.loading.show("Wczytywanie tworzenia postaci...");
+        alt.setTimeout(() => {
+            this.player.fadeIn(500);
+            this.player.unblurScreen(250);
+            this.loading.hide();
+        }, 1500);
+    }
+    
+
+    @onServer("charcreator:resetcamera")
+    public onResetCamera(): void {
+        this.createCamera();
+        this.logger.info(`[DEBUG] Resetting camera.`);
+        this.logger.info(`[DEBUG] Creating camera at pos: ${JSON.stringify(this.camPortrait.pos)}, rot: ${JSON.stringify(this.camPortrait.rot)}`);
+
+        this.onChangeCamPos(this.lastIndex, 0);
+    }
+
+    @onServer("charcreator:reset")
+    @on("disconnect")
+    public onReset(): void {
+        native.deletePed(this.pedId);
+
+        this.loading.hide();
+    }
+
+    @onServer("charcreator:cantfinishedcreation") @on("charcreator:cantfinishedcreation")
+    public onCantFinishedCreation(): void {
+        this.player.fadeIn(250);
+        this.loading.hide();
+        this.event.emitGui("charcreator:resetissaving");
+    }
+
+    @onGui("charcreator:removepurchaseorder")
+    public onRemovePurchaseOrder(purchaseOrder: CharacterCreatorPurchaseInterface): void {
+        if (!purchaseOrder.removeable) {
+            return;
+        }
+
+        this.charCreator.removePurchase(purchaseOrder);
+    }
+
+    @onGui("charcreator:requestclose")
+    public onRequestClose(): void {
+        this.dialog.create({
+            type: DialogType.TWO_BUTTON_DIALOG,
+            title: "Charakter Erstellung verlassen",
+            description: "Bist du dir sicher das du die Charakter Erstellung verlassen möchtest? Dein aktueller Charakter würde nicht gespeichert werden!",
+            hasBankAccountSelection: false,
+            hasInputField: false,
+            freezeGameControls: false,
+            primaryButton: "Ja",
+            secondaryButton: "Nein",
+            primaryButtonClientEvent: "charcreator:close",
+        });
+    }
+
+    @on("charcreator:close")
+    public onClose(): void {
+        native.deletePed(this.pedId);
+
+        this.player.fadeOut(500);
+        alt.setTimeout(() => {
+            this.event.emitServer("charcreator:close");
+            this.event.emitGui("charcreator:reset");
+        }, 700);
+    }
+
+    @onGui("charcreator:getcharacter")
+    public onGetCharacter(): void {
+        this.event.emitGui("charcreator:setcharacter", this.character.getCachedCharacter,
+                this.clothing.getMaxDrawableVariations(this.pedId), this.isNewCharacter);
+    }
+
+    @onGui("charcreator:setcamerapos")
+    public onChangeCamPos(index: number, time: number = 850): void {
+        let pos: alt.Vector3;
+        let rot: alt.Vector3;
+        this.lastIndex = index;
+
+        switch (index) {
+            case 0:
+                pos = this.camPortrait.pos
+                rot = this.camPortrait.rot;
+                break;
+            case 1:
+                pos = this.camFace.pos
+                rot = this.camFace.rot;
+                break;
+            case 2:
+                pos = this.camTorso.pos
+                rot = this.camTorso.rot;
+                break;
+            case 3:
+                pos = this.camPants.pos
+                rot = this.camPants.rot;
+                break;
+            case 4:
+                pos = this.camFeets.pos
+                rot = this.camFeets.rot;
+                break;
+            default:
+                pos = this.camPortrait.pos
+                rot = this.camPortrait.rot;
+                break;
+        }
+
+        this.camera.moveCamera(pos, rot, time);
+
+        alt.setTimeout(() => {
+            this.event.emitGui("charcreator:resetcamerabuttons");
+        }, time + 10);
+    }
+
+    @onGui("charcreator:rotatecharacter")
+    public onRotateCharacter(dir: number): void {
+        this.update.remove(this.everyTickRef);
+        this.everyTickRef = this.update.add(() => this.tick(dir));
+    }
+
+    @onGui("charcreator:rotatestop")
+    public onRotateStop(): void {
+        this.update.remove(this.everyTickRef);
+    }
+
+    @onGui("charcreator:updatedata")
+    public onUpdateData(data: CharacterCreatorDataInterface): void {
+        if (data.character.gender !== this.charCreator.getCharacterData.character.gender) {
+            this.switchGender(data.character);
+        }
+    
+        this.charCreator.updateData(data);
+
+        this.updateCharacter(data.character, data.clothes);
+
+        this.event.emitGui("clothesmenu:setmaxtexturevariation",
+                this.clothing.getMaxTextureVariations(this.pedId, data.clothes));
+    }
+    
+    @onGui("charcreator:setnude")
+    public onSetNude(): void {
+        this.setNudeMode = true;
+        this.character.setNude(this.pedId, this.charCreator.getCharacterData.character.gender);
+    }
+
+    @onGui("charcreator:loadclothes")
+    public onLoadClothes(): void {
+        this.setNudeMode = false;
+        this.character.updateClothes(this.charCreator.getCharacterData.clothes, this.pedId, this.charCreator.getCharacterData.character.gender);
+    }
+
+    @onGui("charcreator:requestbuycharacter")
+    public onRequestBuyCharacter(): void {
+        this.dialog.create({
+            type: DialogType.TWO_BUTTON_DIALOG,
+            title: "Charakter kaufen",
+            description: "Bist du dir sicher das du diesen Charakter so kaufen möchtest? Du kannst später einige Dinge nicht mehr anpassen! Beachte das du in allen Tabs oben was einstellen kannst, bist du dir sicher das du den Charakter so erstellen möchtest?",
+            hasBankAccountSelection: false,
+            hasInputField: false,
+            freezeGameControls: false,
+            primaryButton: "Ja",
+            secondaryButton: "Nein",
+            primaryButtonClientEvent: "charcreator:buycharacter",
+            secondaryButtonClientEvent: "charcreator:cantfinishedcreation",
+            closeButtonClientEvent: "charcreator:cantfinishedcreation"
+        });
+    }
+
+    @on("charcreator:buycharacter")
+    public onBuyCharacter(): void {
+        this.player.fadeOut(500);
+        this.loading.show("Transaktion wird bearbeitet...");
+
+        alt.setTimeout(() => {
+            this.event.emitServer("charcreator:createcharacter", JSON.stringify(this.charCreator.getCharacterData));
+        }, 600);
+    }
+
+    private createCamera(): void {
+        this.camera.createCamera(this.camPortrait.pos, this.camPortrait.rot);
+    }
+
+    private tick(dir: number): void {
+        let heading = native.getEntityHeading(this.pedId);
+        const newHeading = (heading += dir);
+        this.logger.info(`[DEBUG] Rotating character. New Heading: ${newHeading}`);
+
+        native.setEntityHeading(this.pedId, newHeading);
+    }
+
+    
+    private switchGender(char: CharacterInterface): void {
+        native.deletePed(this.pedId);
+
+        if (char.gender == GenderType.MALE) {
+            this.pedId = native.createPed(2, 1885233650, this.characterPos.x, this.characterPos.y, this.characterPos.z,
+                    180, false, false);
+        } else if (char.gender == GenderType.FEMALE) {
+            this.pedId = native.createPed(2, -1667301416, this.characterPos.x, this.characterPos.y, this.characterPos.z,
+                    180, false, false);
+        }
+
+        char.father = 0;
+        char.mother = 21;
+        char.similarity = (char.gender === GenderType.MALE) ? 0 : 1;
+        char.skinSimilarity = (char.gender === GenderType.MALE) ? 0 : 1;
+        char.appearances.hair = 0;
+
+        this.event.emitGui("charcreator:setgender", char.gender, this.clothing.getMaxDrawableVariations(this.pedId));
+    }
+
+    private updateCharacter(character: CharacterInterface, clothes: ClothesInterface): void {
+        this.charCreator.resetTypePurchaseOrders(CharacterCreatorPurchaseType.CLOTHINGS);
+
+        // Save the torso extra because its not a cloth item.
+        if (clothes.torso) {
+            character.torso = clothes.torso.drawableId;
+            character.torsoTexture = clothes.torso.textureId;
+        }
+
+        this.character.apply(character, this.pedId);
+        this.character.updateClothes(clothes, this.pedId, character.gender);
+    }
+}

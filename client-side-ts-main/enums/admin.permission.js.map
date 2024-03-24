@@ -1,0 +1,1 @@
+{"version":3,"file":"admin.permission.js","sourceRoot":"","sources":["admin.permission.ts"],"names":[],"mappings":"AAAA,MAAM,CAAN,IAAY,eAMX;AAND,WAAY,eAAe;IACvB,qDAAQ,CAAA;IAAE,yDAAe,CAAA;IAEzB,uDAAuB,CAAA;IAAE,iFAAmC,CAAA;IAAE,8EAAiC,CAAA;IAAE,4EAAgC,CAAA;IAEjI,oDAAoB,CAAA;IAAE,wDAA4B,CAAA;IAAE,qDAAoB,CAAA;IAAE,yDAA0C,CAAA;AACxH,CAAC,EANW,eAAe,KAAf,eAAe,QAM1B"}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="UserContentModel">
+    <attachedFolders>
+      <Path>../client-side</Path>
+      <Path>../client-side-ts</Path>
+      <Path>../shared</Path>
+      <Path>../webview/src</Path>
+    </attachedFolders>
+    <explicitIncludes />
+    <explicitExcludes />
+  </component>
+</project>
